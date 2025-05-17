@@ -1,4 +1,5 @@
 from typing import Hashable
+
 import xarray as xr
 
 from metaarrays.transformer import PixelToChunkLabelTransformer

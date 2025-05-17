@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from numpy.typing import NDArray
-from .types import ndarray
+from metaarrays.types import ndarray
 
 
 class PixelToChunkLabelTransformer(ABC):
