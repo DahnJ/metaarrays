@@ -4,12 +4,11 @@ import xarray as xr
 
 from metaarrays.dict import safeget
 from metaarrays.mapper import Level, Mapper, MapSpec, Space, Spec
-from metaarrays.transform import PixelToChunkLabelTransform
 
 
 def construct_metaarray_coordinates(
     ds: xr.Dataset,
-    transforms: dict[Hashable, PixelToChunkLabelTransform],
+    mappers: dict[Hashable, Mapper],
     sel: dict[Hashable, Any] | None = None,
 ) -> xr.Dataset:
     coords = {}
@@ -17,11 +16,7 @@ def construct_metaarray_coordinates(
         from_=Spec(level=Level.PIXEL, space=Space.LABEL),
         to=Spec(level=Level.CHUNK, space=Space.LABEL),
     )
-    # TODO: Refactor to mapper?
-    for name, transform in transforms.items():
-        mapper = Mapper(
-            coordinate=ds[name], chunksizes=ds.chunksizes[name], transform=transform
-        )
+    for name, mapper in mappers.items():
         coords[name] = mapper.map(spec, safeget(sel, name))
 
     return xr.Dataset(
