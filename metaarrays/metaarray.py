@@ -1,41 +1,49 @@
-from enum import IntEnum
 from typing import Any, Hashable
 
+from metaarrays.bitmask import construct_bitmask
 import numpy as np
 import xarray as xr
 from icechunk import Session
 from numpy.typing import NDArray
 
 from metaarrays.coordinates import construct_metaarray_coordinates
+from metaarrays.dict import safeget
 from metaarrays.icechunk import get_initialized_chunk_indices
+from metaarrays.mapper import Mapper, construct_mappers
 from metaarrays.transform import PixelToChunkLabelTransform
-
-
-class ChunkState(IntEnum):
-    UNINITIALIZED = 0
-    INITIALIZED = 1
 
 
 def construct_metaarray(
     session: Session,
     group: str,
-    transform: dict[Hashable, PixelToChunkLabelTransform],
+    transforms: dict[Hashable, PixelToChunkLabelTransform],
     variables: list[str],
     sel: dict[Hashable, Any] | None = None,
 ) -> xr.Dataset:
     ds = xr.open_zarr(session.store, group=group, consolidated=False, zarr_version=3)
-    coordinates = construct_metaarray_coordinates(ds, transform, sel=sel)
+    coordinates = construct_metaarray_coordinates(ds, transforms, sel=sel)
     initialized = get_initialized_chunk_indices(session, group, variables)
-    return _contruct_dataset(coordinates, initialized)
+    mappers = construct_mappers(ds, transforms)
+    return _construct_dataset(coordinates, initialized, mappers, sel)
 
 
-def _contruct_dataset(
+def _construct_dataset(
     coordinates: xr.Dataset,
     initialized: dict[Hashable, NDArray[np.int_]],
+    mappers: dict[Hashable, Mapper],
+    sel: dict[Hashable, Any] | None = None,
 ) -> xr.Dataset:
-    coord_names = list(coordinates.coords)
+    coord_names = list(mappers.keys())
     data = {
-        variable: (coord_names, _construct_values(coordinates, initialized_chunks))
+        variable: (
+            coord_names,
+            construct_bitmask(
+                coordinates,
+                initialized_chunks,
+                mappers,
+                sel,
+            ),
+        )
         for variable, initialized_chunks in initialized.items()
     }
 
@@ -43,16 +51,3 @@ def _contruct_dataset(
         data,
         coords=coordinates.coords,
     )
-
-
-def _construct_values(
-    coordinates: xr.Dataset,
-    initialized: NDArray[np.int_],
-) -> NDArray[np.int_]:
-    shape = tuple(coordinates[v].size for v in coordinates.coords)
-    bitmask = np.full(shape, ChunkState.UNINITIALIZED.value, dtype=np.int8)
-
-    if len(initialized) > 0:
-        bitmask[tuple(initialized.T)] = ChunkState.INITIALIZED.value
-
-    return bitmask

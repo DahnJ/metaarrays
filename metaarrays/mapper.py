@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Sequence
+from typing import Any, Hashable, Sequence
 
 import numpy as np
 import xarray as xr
@@ -81,6 +81,22 @@ class Mapper(BaseModel):
                     pixel_index,
                     self.transform,
                 )
+
+
+def construct_mappers(
+    dataset: xr.Dataset,
+    transforms: dict[Hashable, PixelToChunkLabelTransform],
+) -> dict[Hashable, Mapper]:
+    mappers = {}
+    first_var = next(iter(dataset.data_vars))
+    dims = dataset[first_var].dims
+    for name in dims:
+        mappers[name] = Mapper(
+            coordinate=dataset[name],
+            chunksizes=dataset.chunksizes[name],
+            transform=transforms[name],
+        )
+    return mappers
 
 
 def _map_pixel_index_to_pixel_index(
