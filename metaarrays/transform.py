@@ -1,24 +1,24 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-
 from numpy.typing import NDArray
+
 from metaarrays.types import ndarray
 
 
-class PixelToChunkLabelTransformer(ABC):
+class PixelToChunkLabelTransform(ABC):
     @abstractmethod
     def transform(self, coordinates: ndarray, chunksizes: tuple[int, ...]) -> ndarray:
         """Translate pixel-level labels to chunk-level labels."""
 
 
-class FirstCoordinate(PixelToChunkLabelTransformer):
+class FirstCoordinate(PixelToChunkLabelTransform):
     def transform(self, coordinates: ndarray, chunksizes: tuple[int, ...]) -> ndarray:
         chunk_bound_labels = _get_chunk_bound_labels(coordinates, chunksizes)
         return chunk_bound_labels[:, 0]
 
 
-class Centroid(PixelToChunkLabelTransformer):
+class Centroid(PixelToChunkLabelTransform):
     def transform(self, coordinates: ndarray, chunksizes: tuple[int, ...]) -> ndarray:
         chunk_bound_labels = _get_chunk_bound_labels(coordinates, chunksizes)
         return np.mean(chunk_bound_labels, axis=1).astype(coordinates.dtype)  # type: ignore

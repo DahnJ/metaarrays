@@ -1,9 +1,9 @@
+import dask.array as da
 import numpy as np
 import xarray as xr
-import dask.array as da
 
-from metaarrays.transformer import Centroid, FirstCoordinate
 from metaarrays.coordinates import construct_metaarray_coordinates
+from metaarrays.transform import Centroid, FirstCoordinate
 
 
 class TestCoordinates:
@@ -28,7 +28,7 @@ class TestCoordinates:
 
         actual = construct_metaarray_coordinates(
             ds,
-            transformers={
+            transforms={
                 "x": Centroid(),
                 "y": Centroid(),
             },
@@ -64,7 +64,7 @@ class TestCoordinates:
 
         actual = construct_metaarray_coordinates(
             ds,
-            transformers={
+            transforms={
                 "time": FirstCoordinate(),
                 "x": Centroid(),
                 "y": Centroid(),
@@ -98,7 +98,7 @@ class TestCoordinates:
 
         actual = construct_metaarray_coordinates(
             ds,
-            transformers={
+            transforms={
                 "time": FirstCoordinate(),
                 "x": Centroid(),
                 "y": Centroid(),

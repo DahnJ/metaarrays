@@ -5,7 +5,7 @@ import xarray as xr
 import zarr
 
 from metaarrays.metaarray import construct_metaarray
-from metaarrays.transformer import Centroid
+from metaarrays.transform import Centroid
 
 
 class TestConstructMetaArray:
@@ -31,7 +31,7 @@ class TestConstructMetaArray:
         actual = construct_metaarray(
             session=session,
             group=group,
-            transformers={
+            transform={
                 "x": Centroid(),
                 "y": Centroid(),
             },

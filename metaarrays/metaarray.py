@@ -1,15 +1,14 @@
+from enum import IntEnum
 from typing import Hashable
-from icechunk import Session
+
 import numpy as np
-from numpy.typing import NDArray
 import xarray as xr
+from icechunk import Session
+from numpy.typing import NDArray
 
 from metaarrays.coordinates import construct_metaarray_coordinates
-from metaarrays.transformer import PixelToChunkLabelTransformer
 from metaarrays.icechunk import get_initialized_chunk_indices
-
-
-from enum import IntEnum
+from metaarrays.transform import PixelToChunkLabelTransform
 
 
 class ChunkState(IntEnum):
@@ -20,11 +19,11 @@ class ChunkState(IntEnum):
 def construct_metaarray(
     session: Session,
     group: str,
-    transformers: dict[Hashable, PixelToChunkLabelTransformer],
+    transform: dict[Hashable, PixelToChunkLabelTransform],
     variables: list[str],
 ) -> xr.Dataset:
     ds = xr.open_zarr(session.store, group=group, consolidated=False, zarr_version=3)
-    coordinates = construct_metaarray_coordinates(ds, transformers)
+    coordinates = construct_metaarray_coordinates(ds, transform)
     initialized = get_initialized_chunk_indices(session, group, variables)
     return _contruct_dataset(coordinates, initialized)
 

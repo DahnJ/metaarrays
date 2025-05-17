@@ -1,6 +1,8 @@
-import pytest
 import numpy as np
-from metaarrays.transformer import Centroid, FirstCoordinate
+import pytest
+
+from metaarrays.transform import Centroid, FirstCoordinate
+
 
 class TestFirstCoordinate:
     def test_transform(self) -> None:
@@ -16,6 +18,7 @@ class TestFirstCoordinate:
         transformer = FirstCoordinate()
         with pytest.raises(ValueError):
             transformer.transform(coords, chunksizes)
+
 
 class TestCentroid:
     def test_transform(self) -> None:
