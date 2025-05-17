@@ -1,10 +1,13 @@
 import numpy as np
 import asyncio
+import nest_asyncio
 
 from collections.abc import Callable
 from typing import Any, Iterable
 from numpy.typing import NDArray
 from icechunk import Session
+
+nest_asyncio.apply()
 
 
 def get_initialized_chunk_indices(
@@ -33,12 +36,6 @@ def get_initialized_chunk_indices(
 
 def _run_sync(func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
     """Run an async function in a synchronous context."""
-    try:
-        loop = asyncio.get_event_loop()
-        loop_is_running = loop.is_running()
-    except RuntimeError:
-        loop_is_running = False
+    loop = asyncio.get_event_loop()
 
-    if loop_is_running:
-        return loop.run_until_complete(func(*args, **kwargs))
-    return asyncio.run(func(*args, **kwargs))
+    return loop.run_until_complete(func(*args, **kwargs))
