@@ -108,6 +108,14 @@ class TestMapper:
                 slice(1, 3),
                 np.array([1, 2, 3]),
             ),
+            (
+                MapSpec(
+                    from_=Spec(level=Level.PIXEL, space=Space.LABEL),
+                    to=Spec(level=Level.CHUNK, space=Space.INDEX),
+                ),
+                None,
+                np.array([0, 1, 2, 3, 4]),
+            ),
         ],
     )
     def test_mapper(

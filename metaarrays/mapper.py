@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any
+from typing import Any, Sequence
 
 import numpy as np
 import xarray as xr
@@ -37,7 +37,7 @@ class Mapper(BaseModel):
     class Config:
         arbitrary_types_allowed = True
 
-    def map(self, specification: MapSpec, value: Any) -> ndarray:
+    def map(self, specification: MapSpec, value: Any | None = None) -> ndarray:
         if self.chunksizes is None and (
             specification.from_.level == Level.CHUNK
             or specification.to.level == Level.CHUNK
@@ -83,42 +83,60 @@ class Mapper(BaseModel):
                 )
 
 
-def _map_pixel_index_to_pixel_index(coords, sel):
+def _map_pixel_index_to_pixel_index(
+    coords: xr.DataArray, sel: Any | None
+) -> np.ndarray:
     map_ = xr.DataArray(
         np.arange(len(coords)),
         dims=[coords.name],
         coords={coords.name: np.arange(len(coords))},
     )
+    if sel is None:
+        return map_.values
     return map_.sel({coords.name: sel}).values
 
 
-def _map_pixel_label_to_pixel_index(coord, sel):
+def _map_pixel_label_to_pixel_index(coord: xr.DataArray, sel: Any | None) -> np.ndarray:
     map_ = xr.DataArray(
         data=np.arange(len(coord)),
         coords={coord.name: coord},
     )
+    if sel is None:
+        return map_.values
     return map_.sel({coord.name: sel}).values
 
 
-def _map_pixel_index_to_pixel_label(coords, sel):
+def _map_pixel_index_to_pixel_label(
+    coords: xr.DataArray, sel: Any | None
+) -> np.ndarray:
+    if sel is None:
+        return coords.values
     return coords.isel({coords.name: sel}).values
 
 
-def _map_pixel_index_to_chunk_index(coords, chunksizes, sel):
+def _map_pixel_index_to_chunk_index(
+    coords: xr.DataArray, chunksizes: Sequence[int], sel: Any | None
+) -> np.ndarray:
     map_ = xr.DataArray(
         np.repeat(np.arange(len(chunksizes)), chunksizes),
         dims=[coords.name],
         coords={coords.name: np.arange(len(coords))},
     )
+    if sel is None:
+        return np.unique(map_.values)
     return np.unique(map_.isel({coords.name: sel}).values)
 
 
-def _map_chunk_index_to_pixel_index(coords, chunksizes, sel):
+def _map_chunk_index_to_pixel_index(
+    coords: xr.DataArray, chunksizes: Sequence[int], sel: Any | None
+) -> np.ndarray:
     map_ = xr.DataArray(
         np.arange(len(coords)),
         dims=[coords.name],
         coords={coords.name: np.repeat(np.arange(len(chunksizes)), chunksizes)},
     )
+    if sel is None:
+        return map_.values
     if isinstance(sel, list):
         raise NotImplementedError(
             "Mapping from chunk index with a list of indices is not implemented."
@@ -126,7 +144,12 @@ def _map_chunk_index_to_pixel_index(coords, chunksizes, sel):
     return map_.sel({coords.name: sel}).values
 
 
-def _map_pixel_index_to_chunk_label(coords, chunksizes, sel, transform):
+def _map_pixel_index_to_chunk_label(
+    coords: xr.DataArray,
+    chunksizes: Sequence[int],
+    sel: Any | None,
+    transform: PixelToChunkLabelTransform,
+) -> np.ndarray:
     chunk_index = _map_pixel_index_to_chunk_index(coords, chunksizes, sel)
     chunk_labels = transform.transform(coords.values, chunksizes)
     map_ = xr.DataArray(

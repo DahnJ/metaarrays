@@ -1,5 +1,5 @@
 from enum import IntEnum
-from typing import Hashable
+from typing import Any, Hashable
 
 import numpy as np
 import xarray as xr
@@ -21,9 +21,10 @@ def construct_metaarray(
     group: str,
     transform: dict[Hashable, PixelToChunkLabelTransform],
     variables: list[str],
+    sel: dict[Hashable, Any] | None = None,
 ) -> xr.Dataset:
     ds = xr.open_zarr(session.store, group=group, consolidated=False, zarr_version=3)
-    coordinates = construct_metaarray_coordinates(ds, transform)
+    coordinates = construct_metaarray_coordinates(ds, transform, sel=sel)
     initialized = get_initialized_chunk_indices(session, group, variables)
     return _contruct_dataset(coordinates, initialized)
 

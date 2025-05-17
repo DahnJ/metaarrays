@@ -73,6 +73,46 @@ class TestCoordinates:
 
         assert actual.equals(expected)
 
+    def test_coordinates_with_sel(self) -> None:
+        ds = xr.Dataset(
+            {
+                "foo": (("time", "x", "y"), da.empty((10, 10, 10), chunks=(1, 2, 2))),
+                "bar": (("time", "x", "y"), da.empty((10, 10, 10), chunks=(1, 2, 2))),
+            },
+            coords={
+                "time": [
+                    np.datetime64("2010") + np.timedelta64(i, "Y") for i in range(10)
+                ],
+                "x": 10 * np.arange(10),
+                "y": 10 * np.arange(10),
+            },
+        )
+        transforms = {
+            "time": FirstCoordinate(),
+            "x": Centroid(),
+            "y": Centroid(),
+        }
+        sel = {
+            "time": [np.datetime64("2010"), np.datetime64("2011")],
+            "x": slice(10, 30),
+            "y": slice(30, 60),
+        }
+
+        expected = xr.Dataset(
+            coords={
+                "time": [np.datetime64("2010"), np.datetime64("2011")],
+                "x": np.array([5, 25]),
+                "y": np.array([25, 45, 65]),
+            },
+        )
+
+        actual = construct_metaarray_coordinates(
+            ds,
+            transforms=transforms,
+            sel=sel,
+        )
+        assert actual.equals(expected)
+
     def test_coordinates_large(self) -> None:
         """Test performance with large datasets with 100 mil chunks."""
         ds = xr.Dataset(
