@@ -1,0 +1,13 @@
+{
+    "workbench.colorCustomizations": {
+        "editorRuler.foreground": "#555555",
+        "activityBar.background": "#2F2F16",
+        "titleBar.activeBackground": "#42411F",
+        "titleBar.activeForeground": "#FAFAF5"
+    },
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
