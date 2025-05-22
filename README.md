@@ -1,15 +1,54 @@
 
 # MetaArrays
+
 ![](https://i.imgur.com/Ec65Iob.png)
 
-This is an example implementation of MetaArrays a data structure used to 
-track information about initialized chunks in an Icechunk Zarr store.
 
-Start with the [walkthrough](https://github.com/DahnJ/metaarrays/blob/main/walkthrough.ipynb).
+## Motivation
 
-For more context, see https://github.com/zarr-developers/zarr-specs/issues/300.
+There are two roughly two main ways to store earth observation data:
 
-This is not meant to be a usable package, although it could be made into one.
+- Individual scenes in TIFF files
+- Data cubes in Zarr
+
+While data cubes bring many advantages, it is not always desirable to fully populate a data cube – instead, we may only want to populate the subset needed at any given time.
+
+This is the pattern described in [Incrementally-populated Zarr Arrays](https://github.com/zarr-developers/zarr-specs/issues/300).
+
+The natural question that arises with Zarr arrays that are not fully populated is:
+
+> What areas of the data cube are populated?
+
+Metaarays are a data structure that enables us to answer this question efficiently.
+
+## How it works
+For a code introduction, see [walkthrough](https://github.com/DahnJ/metaarrays/blob/main/walkthrough.ipynb).
+
+![](https://i.imgur.com/dRs9VXK.png)
+
+A MetaArray is just an Xarray DataArray where the elements represen the chunks themselves.
+
+- The value `1` means the chunk has been populated. The value `0` means the chunk has not been populated.
+- The coordinates are the centroids of the chunks. 
+
+The second detail is important, as it allows us to use existing tooling to query the data.
+
+It allows us to e.g. plot the chunk initialization information:
+
+```python
+data.plot()         # plot individual data pixels
+metaarray.plot()    # plot the metaarray
+```
+
+![](https://i.imgur.com/9ChbPYc.png)
+
+or query it geospatially using [rioxarray](https://github.com/corteva/rioxarray):
+
+
+```python
+metaarray.rio.clip([geometry], all_touched=True)
+```
+
 
 ## Installation
 
@@ -20,6 +59,8 @@ uv sync
 ```
 
 ## What isn't included
+
+This repo is not a feature-full implementation, but rather an example implementation aimed at demonstrating the concept.
 
 For simplicity, the following features are not included:
 
